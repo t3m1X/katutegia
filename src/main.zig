@@ -1,5 +1,6 @@
 const std = @import("std");
 const app = @import("application.zig");
+const utils = @import("utils.zig");
 
 pub fn main() !void {
     const main_states = enum { MAIN_START, MAIN_UPDATE, MAIN_FINISH, MAIN_EXIT };
@@ -8,7 +9,7 @@ pub fn main() !void {
     while (state != main_states.MAIN_EXIT) {
         switch (state) {
             main_states.MAIN_START => {
-                if (app.InitApp()) {
+                if (app.Init()) {
                     state = main_states.MAIN_UPDATE;
                 } else {
                     // TODO: Throw an error
@@ -17,8 +18,11 @@ pub fn main() !void {
             },
 
             main_states.MAIN_UPDATE => {
-                // TODO: Insert Update logic
-                // For now we just go to MAIN_FINISH
+                var update_return: utils.update_state = app.Update();
+                if (update_return == utils.update_state.UPDATE_ERROR) {
+                    state = main_states.MAIN_EXIT;
+                } else if (update_return == utils.update_state.UPDATE_STOP)
+                    state = main_states.MAIN_FINISH;
                 state = main_states.MAIN_FINISH;
             },
 
