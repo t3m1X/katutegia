@@ -1,0 +1,3 @@
+# Ignore output and cache folders created by the zig builder
+zig-cache/
+zig-out/
