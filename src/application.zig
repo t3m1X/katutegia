@@ -1,11 +1,16 @@
-const utils = @import("utils.zig");
+const UpdateState = @import("utils.zig").UpdateState;
 
 pub fn Init() bool {
     // TODO: Init the modules
     return true;
 }
 
-pub fn Update() utils.update_state {
+pub fn Update() UpdateState {
     // TODO: Call pre ~ and post-update
-    return utils.update_state.UPDATE_STOP;
+    return UpdateState.UPDATE_STOP;
+}
+
+pub fn CleanUp() bool {
+    // TODO: Add CleanUp logic of modules
+    return true;
 }

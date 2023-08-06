@@ -1,40 +1,46 @@
 const std = @import("std");
 const app = @import("application.zig");
-const utils = @import("utils.zig");
+const UpdateState = @import("utils.zig").UpdateState;
 
-pub fn main() !void {
-    const main_states = enum { MAIN_START, MAIN_UPDATE, MAIN_FINISH, MAIN_EXIT };
-    var state = main_states.MAIN_START;
+pub fn main() !u8 {
+    const MainStates = enum { MAIN_START, MAIN_UPDATE, MAIN_FINISH, MAIN_EXIT };
+    const MainReturn = enum(u8) { RETURN_SUCCESS = 0, RETURN_FAILURE };
+    var state = MainStates.MAIN_START;
+    var main_return: u8 = MainReturn.RETURN_FAILURE;
 
-    while (state != main_states.MAIN_EXIT) {
+    while (state != MainStates.MAIN_EXIT) {
         switch (state) {
-            main_states.MAIN_START => {
+            MainStates.MAIN_START => {
                 if (app.Init()) {
-                    state = main_states.MAIN_UPDATE;
+                    state = MainStates.MAIN_UPDATE;
                 } else {
                     // TODO: Throw an error
-                    state = main_states.MAIN_EXIT;
+                    state = MainStates.MAIN_EXIT;
                 }
             },
 
-            main_states.MAIN_UPDATE => {
-                var update_return: utils.update_state = app.Update();
-                if (update_return == utils.update_state.UPDATE_ERROR) {
-                    state = main_states.MAIN_EXIT;
-                } else if (update_return == utils.update_state.UPDATE_STOP)
-                    state = main_states.MAIN_FINISH;
-                state = main_states.MAIN_FINISH;
+            MainStates.MAIN_UPDATE => {
+                var update_return: UpdateState = app.Update();
+                if (update_return == UpdateState.UPDATE_ERROR) {
+                    state = MainStates.MAIN_EXIT;
+                } else if (update_return == UpdateState.UPDATE_STOP)
+                    state = MainStates.MAIN_FINISH;
             },
 
-            main_states.MAIN_FINISH => {
-                // TODO: Add CleanUp logic
-                // For now we go to MAIN_EXIT
-                state = main_states.MAIN_EXIT;
+            MainStates.MAIN_FINISH => {
+                if (app.CleanUp()) {
+                    main_return = MainReturn.RETURN_SUCCESS;
+                } else {
+                    // TODO: Throw an error
+                }
+                state = MainStates.MAIN_EXIT;
             },
 
             else => {
-                state = main_states.MAIN_EXIT;
+                state = MainStates.MAIN_EXIT;
             },
         }
     }
+
+    return main_return;
 }
