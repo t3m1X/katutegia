@@ -6,41 +6,40 @@ pub fn main() !u8 {
     const MainStates = enum { start, update, finish, exit };
     const MainReturn = enum(u8) { success = 0, failure };
     var state = MainStates.start;
-    var main_return: u8 = MainReturn.failure;
+    var main_return = MainReturn.failure;
 
     while (state != MainStates.exit) {
         switch (state) {
             MainStates.start => {
                 if (app.init()) {
-                    state = MainStates.update;
+                    state = .update;
                 } else {
                     // TODO: Throw an error
-                    state = MainStates.exit;
+                    state = .exit;
                 }
             },
 
             MainStates.update => {
-                var update_return: UpdateState = app.Update();
-                if (update_return == UpdateState.fail) {
-                    state = MainStates.exit;
-                } else if (update_return == UpdateState.stop)
-                    state = MainStates.finish;
+                const update_return: UpdateState = app.Update();
+                if (update_return == .fail) {
+                    state = .exit;
+                } else if (update_return == .stop)
+                    state = .finish;
             },
 
             MainStates.finish => {
                 if (app.cleanUp()) {
-                    main_return = MainReturn.success;
+                    main_return = .success;
                 } else {
                     // TODO: Throw an error
                 }
-                state = MainStates.exit;
+                state = .exit;
             },
 
             else => {
-                state = MainStates.exit;
+                state = .exit;
             },
         }
     }
-
-    return main_return;
+    return @intFromEnum(main_return); // TODO: Change this when upgrading to 0.11
 }
