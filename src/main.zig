@@ -1,4 +1,3 @@
-const std = @import("std");
 const app = @import("application.zig");
 const UpdateState = @import("utils.zig").UpdateState;
 
@@ -10,16 +9,16 @@ pub fn main() !u8 {
 
     while (state != MainStates.exit) {
         switch (state) {
-            MainStates.start => {
+            .start => {
                 if (app.init()) {
                     state = .update;
-                } else {
+                } else |_| {
                     // TODO: Throw an error
                     state = .exit;
                 }
             },
 
-            MainStates.update => {
+            .update => {
                 const update_return: UpdateState = app.Update();
                 if (update_return == .fail) {
                     state = .exit;
@@ -27,10 +26,10 @@ pub fn main() !u8 {
                     state = .finish;
             },
 
-            MainStates.finish => {
+            .finish => {
                 if (app.cleanUp()) {
                     main_return = .success;
-                } else {
+                } else |_| {
                     // TODO: Throw an error
                 }
                 state = .exit;
@@ -41,5 +40,5 @@ pub fn main() !u8 {
             },
         }
     }
-    return @intFromEnum(main_return); // TODO: Change this when upgrading to 0.11
+    return @intFromEnum(main_return);
 }

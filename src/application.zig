@@ -1,16 +1,17 @@
 const UpdateState = @import("utils.zig").UpdateState;
+const window = @import("window.zig");
 
-pub fn init() bool {
+pub fn init() !void {
     // TODO: Init the modules
-    return true;
+    try window.init();
 }
 
 pub fn Update() UpdateState {
     // TODO: Call pre ~ and post-update
-    return UpdateState.stop;
+    return .stop;
 }
 
-pub fn cleanUp() bool {
+pub fn cleanUp() !void {
     // TODO: Add CleanUp logic of modules
-    return true;
+    try window.cleanUp();
 }

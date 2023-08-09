@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
@@ -23,6 +24,27 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+
+    // Link LibC
+    exe.linkLibC();
+
+    // Link SDL
+    if (builtin.target.os.tag == .windows) {
+        exe.addVcpkgPaths(.dynamic) catch {};
+        if (exe.vcpkg_bin_path) |path| {
+            const src_path = std.fs.path.join(b.allocator, &.{ path, "SDL2.dll" }) catch @panic("out of memory");
+
+            if (std.fs.cwd().access(src_path, .{})) {
+                // Found SDL2.dll, we link via vcpkg
+                exe.linkSystemLibrary("sdl2");
+                b.installBinFile(src_path, "SDL2.dll");
+            } else |_| {
+                // Nothing
+            }
+        }
+    } else {
+        exe.linkSystemLibrary("sdl2");
+    }
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
