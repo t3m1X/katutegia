@@ -1,7 +1,4 @@
-const c = @cImport({
-    @cInclude("SDL2/SDL.h");
-});
-
+const c = @import("c.zig");
 var window: ?*c.SDL_Window = null;
 
 pub fn init() !void {
