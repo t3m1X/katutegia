@@ -6,6 +6,18 @@ pub fn init() !void {
         c.SDL_Log("Unable to initialize SDL: %s", c.SDL_GetError());
         return error.SDLInitializationFailed;
     }
+
+    // TODO: These need to not be hardcoded
+    const width = 758;
+    const height = 660;
+    const flags = c.SDL_WINDOW_SHOWN | c.SDL_WINDOW_RESIZABLE;
+
+    window = c.SDL_CreateWindow("Katutegia", c.SDL_WINDOWPOS_UNDEFINED, c.SDL_WINDOWPOS_UNDEFINED, width, height, flags);
+
+    if (window == null) {
+        c.SDL_Log("Window could not be initialized: %s", c.SDL_GetError());
+        return error.SDLInitializationFailed;
+    }
 }
 
 pub fn cleanUp() !void {
