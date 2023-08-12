@@ -2,12 +2,12 @@ const c = @import("c.zig");
 const UpdateState = @import("utils.zig").UpdateState;
 
 const max_keys = 300;
+var keyboard: [max_keys]KeyState = undefined;
 pub const KeyState = enum(u8) { idle = 0, down, repeat, up };
-pub var keyboard: [max_keys]u8 = undefined;
 
 pub fn init() !void {
-    for (0..max_keys) |i| {
-        keyboard[i] = @intFromEnum(KeyState.idle);
+    for (&keyboard) |*key| {
+        key.* = .idle;
     }
 
     if (c.SDL_Init(c.SDL_INIT_EVENTS) != 0) {
@@ -26,19 +26,44 @@ pub fn PreUpdate() UpdateState {
 
     for (0..max_keys) |i| {
         if (keys[i] == 1) {
-            if (keyboard[i] == @intFromEnum(KeyState.idle)) {
-                keyboard[i] = @intFromEnum(KeyState.down);
-            } else keyboard[i] = @intFromEnum(KeyState.repeat);
+            if (keyboard[i] == .idle) {
+                keyboard[i] = .down;
+            } else keyboard[i] = .repeat;
         } else {
-            if (keyboard[i] == @intFromEnum(KeyState.repeat) or keyboard[i] == @intFromEnum(KeyState.down)) {
-                keyboard[i] = @intFromEnum(KeyState.up);
-            } else keyboard[i] = @intFromEnum(KeyState.idle);
+            if (keyboard[i] == .repeat or keyboard[i] == .down) {
+                keyboard[i] = .up;
+            } else keyboard[i] = .idle;
         }
     }
 
     // TODO: This is a temporal exit
-    if (keyboard[41] != 0)
+    if (@intFromEnum(keyboard[c.SDL_SCANCODE_ESCAPE]) != 0) //SCANCODE = 41
         return .stop;
 
     return .success;
+}
+
+pub fn GetKey(key: u8) !KeyState {
+    if (key >= max_keys)
+        return error.WrongKey;
+    return keyboard[key];
+}
+
+// Quick utilities
+pub fn isKeyDown(key: u8) bool {
+    if (key >= max_keys)
+        return false;
+    return keyboard[key] == .down;
+}
+
+pub fn isKeyUp(key: u8) bool {
+    if (key >= max_keys)
+        return false;
+    return keyboard[key] == .up;
+}
+
+pub fn isKeyPressed(key: u8) bool {
+    if (key >= max_keys)
+        return false;
+    return keyboard[key] == .down or keyboard[key] == .repeat;
 }

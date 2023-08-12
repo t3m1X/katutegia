@@ -16,7 +16,7 @@ pub fn Update() UpdateState {
 pub fn cleanUp() !void {
     // TODO: Add CleanUp logic of modules
 
-    // Note we call these in reverse order to init
+    // NOTE: we call these in reverse order to init
     try input.cleanUp();
     try window.cleanUp();
 }
