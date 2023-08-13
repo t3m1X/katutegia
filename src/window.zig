@@ -28,5 +28,8 @@ pub fn cleanUp() !void {
     if (window != null)
         c.SDL_DestroyWindow(window);
 
+    surface = null;
+    window = null;
+
     c.SDL_Quit();
 }
