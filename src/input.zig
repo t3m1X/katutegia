@@ -1,9 +1,17 @@
 const c = @import("c.zig");
+const std = @import("std");
+const queue = @import("queue.zig");
 const UpdateState = @import("utils.zig").UpdateState;
 
 const max_keys = 300;
 var keyboard: [max_keys]KeyState = undefined;
 pub const KeyState = enum(u8) { idle = 0, down, repeat, up };
+
+var buffer: [max_keys]u8 = undefined;
+var fba = std.heap.FixedBufferAllocator.init(&buffer);
+const allocator = fba.allocator();
+
+var up_queue = queue.Queue(u8).init(allocator);
 
 pub fn init() !void {
     for (&keyboard) |*key| {
@@ -21,23 +29,31 @@ pub fn cleanUp() !void {
 }
 
 pub fn PreUpdate() UpdateState {
-    c.SDL_PumpEvents();
-    const keys = c.SDL_GetKeyboardState(0);
+    while (up_queue.pop()) |scancode| {
+        keyboard[scancode] = .idle;
+    }
 
-    for (0..max_keys) |i| {
-        if (keys[i] == 1) {
-            if (keyboard[i] == .idle) {
-                keyboard[i] = .down;
-            } else keyboard[i] = .repeat;
-        } else {
-            if (keyboard[i] == .repeat or keyboard[i] == .down) {
-                keyboard[i] = .up;
-            } else keyboard[i] = .idle;
+    var event: c.SDL_Event = undefined;
+    while (c.SDL_PollEvent(&event) == 1) {
+        switch (event.type) {
+            c.SDL_QUIT => {
+                return .stop;
+            },
+            c.SDL_KEYDOWN => {
+                if (event.key.repeat == 0) {
+                    keyboard[event.key.keysym.scancode] = .down;
+                } else keyboard[event.key.keysym.scancode] = .repeat;
+            },
+            c.SDL_KEYUP => {
+                keyboard[event.key.keysym.scancode] = .up;
+                up_queue.push(@intCast(event.key.keysym.scancode)) catch {}; // We ignore allocation error
+            },
+            else => {},
         }
     }
 
     // TODO: This is a temporal exit
-    if (@intFromEnum(keyboard[c.SDL_SCANCODE_ESCAPE]) != 0) //SCANCODE = 41
+    if (keyboard[c.SDL_SCANCODE_ESCAPE] == .repeat) //SCANCODE = 41
         return .stop;
 
     return .success;
