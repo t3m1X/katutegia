@@ -53,7 +53,7 @@ pub fn PreUpdate() UpdateState {
     }
 
     // TODO: This is a temporal exit
-    if (keyboard[c.SDL_SCANCODE_ESCAPE] == .repeat) //SCANCODE = 41
+    if (keyboard[c.SDL_SCANCODE_ESCAPE] != idle) //SCANCODE = 41
         return .stop;
 
     return .success;
