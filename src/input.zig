@@ -3,9 +3,9 @@ const std = @import("std");
 const queue = @import("queue.zig");
 const UpdateState = @import("utils.zig").UpdateState;
 
+pub const KeyState = enum(u8) { idle = 0, down, repeat, up };
 const max_keys = 300;
 var keyboard: [max_keys]KeyState = undefined;
-pub const KeyState = enum(u8) { idle = 0, down, repeat, up };
 
 var buffer: [max_keys]u8 = undefined;
 var fba = std.heap.FixedBufferAllocator.init(&buffer);
@@ -26,6 +26,7 @@ pub fn init() !void {
 
 pub fn cleanUp() !void {
     c.SDL_QuitSubSystem(c.SDL_INIT_EVENTS);
+    up_queue.empty();
 }
 
 pub fn PreUpdate() UpdateState {
@@ -53,7 +54,7 @@ pub fn PreUpdate() UpdateState {
     }
 
     // TODO: This is a temporal exit
-    if (keyboard[c.SDL_SCANCODE_ESCAPE] == .repeat) //SCANCODE = 41
+    if (keyboard[c.SDL_SCANCODE_ESCAPE] != .idle) //SCANCODE = 41
         return .stop;
 
     return .success;

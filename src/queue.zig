@@ -37,5 +37,15 @@ pub fn Queue(comptime Child: type) type {
             }
             return start.data;
         }
+
+        pub fn empty(this: *This) void {
+            var node = this.start orelse return;
+            while (true) {
+                defer this.gpa.destroy(node);
+                node = node.next orelse break;
+            }
+            this.start = null;
+            this.end = null;
+        }
     };
 }
