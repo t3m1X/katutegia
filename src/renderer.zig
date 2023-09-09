@@ -45,14 +45,11 @@ fn blit(texture: *const c.SDL_Texture, x: u8, y: u8, section: ?*const c.SDL_Rect
     var rect = c.SDL_Rect{
         .x = camera.x + x * scale,
         .y = camera.y + y * scale,
-        .w = 0,
-        .h = 0,
+        .w = section.w * size orelse 0,
+        .h = section.h * size orelse 0,
     };
 
-    if (section) {
-        rect.w = section.w * size;
-        rect.h = section.h * size;
-    } else {
+    if (section == null) {
         c.SDL_QueryTexture(texture, null, null, &rect.w, &rect.h);
         rect.w *= size;
         rect.h *= size;
