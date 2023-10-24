@@ -33,14 +33,19 @@ pub fn build(b: *std.Build) void {
         exe.addVcpkgPaths(.dynamic) catch {};
         if (exe.vcpkg_bin_path) |path| {
             const src_path = std.fs.path.join(b.allocator, &.{ path, "SDL2.dll" }) catch @panic("out of memory");
+            const sdl_image_path = std.fs.path.join(b.allocator, &.{ path, "SDL2_image.dll" }) catch @panic("out of memory");
 
             if (std.fs.cwd().access(src_path, .{})) {
                 // Found SDL2.dll, we link via vcpkg
                 exe.linkSystemLibrary("sdl2");
                 b.installBinFile(src_path, "SDL2.dll");
-            } else |_| {
-                // Nothing
-            }
+            } else |_| {}
+
+            if (std.fs.cwd().access(sdl_image_path, .{})) {
+                // Found SDL2_image.dll, we link
+                exe.linkSystemLibrary("SDL2_image");
+                b.installBinFile(sdl_image_path, "SDL2_image.dll");
+            } else |_| {}
         }
     } else {
         exe.linkSystemLibrary("sdl2");

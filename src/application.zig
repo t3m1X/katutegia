@@ -2,6 +2,7 @@ const UpdateState = @import("utils.zig").UpdateState;
 const window = @import("window.zig");
 const input = @import("input.zig");
 const renderer = @import("renderer.zig");
+const texture = @import("texture.zig");
 
 const PreUpdateFns = [_]*const fn () UpdateState{ input.PreUpdate, renderer.PreUpdate };
 const UpdateFns = [_]*const fn () UpdateState{};
@@ -11,6 +12,7 @@ pub fn init() !void {
     // TODO: Init the modules
     try window.init();
     try input.init();
+    try texture.init();
     try renderer.init();
 }
 
@@ -40,6 +42,7 @@ pub fn cleanUp() !void {
 
     // NOTE: we call these in reverse order to init
     try renderer.cleanUp();
+    try texture.cleanUp();
     try input.cleanUp();
     try window.cleanUp();
 }
