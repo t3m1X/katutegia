@@ -1,12 +1,21 @@
 const c = @import("c.zig");
+const std = @import("std");
+const queue = @import("queue.zig");
 const renderer = @import("renderer.zig");
 
 const max_textures = 50;
 var textures: [max_textures]?*c.SDL_Texture = undefined;
 
+var buffer: [max_textures]u8 = undefined;
+var fba = std.heap.FixedBufferAllocator.init(&buffer);
+const allocator = fba.allocator();
+
+var free_textures = queue.Queue(u8).init(allocator);
+
 pub fn init() !void {
     for (0..max_textures) |i| {
         textures[i] = null;
+        free_textures.push(i);
     }
 
     const flags = c.IMG_INIT_PNG | c.IMG_INIT_JPG;
@@ -25,48 +34,51 @@ pub fn cleanUp() !void {
     c.IMG_Quit();
 }
 
-// TODO: Consider working with indices instead of returning pointers
-
-pub fn LoadTexture(path: [*]u8) ?*c.SDL_Texture {
+// Returns -1 on failure
+pub fn loadTexture(path: [*]u8) i8 {
     var texture: ?*c.SDL_Texture = null;
     var surface: ?*c.SDL_Surface = c.IMG_Load(path);
+    var index: i8 = -1;
     if (surface == null) {
-        // TODO: Log error
+        std.log("SDL failed to create surface: {}\n", .{c.SDL_GetError()});
     } else {
         texture = c.SDL_CreateTextureFromSurface(renderer.renderer, surface);
         if (texture == null) {
-            // TODO: Log error
+            std.log("SDL failed to create texture: {}\n", .{c.SDL_GetError()});
         } else {
-            var stored = false;
-            for (0..max_textures) |i| {
-                if (textures[i] == null) {
-                    textures[i] = texture;
-                    stored = true;
-                    break;
-                }
-            }
-            if (!stored) {
-                // TODO: Log error
+            var space = !free_textures.empty();
+            if (space) {
+                index = free_textures.pop();
+                textures[index] = texture;
+            } else {
+                std.log("Too many textures loaded, freeing new texture.");
                 c.SDL_FreeTexture(texture);
-                texture = null;
             }
         }
-
         c.SDL_FreeSurface(surface);
     }
 
+    return index;
+}
+
+pub fn GetTexture(index: u8) ?*c.SDL_Texture {
+    var texture: ?*c.SDL_Texture = null;
+    if (index >= 0 and index < max_textures) {
+        texture = textures[index];
+    }
     return texture;
 }
 
-pub fn unloadTexture(tex: *c.SDL_Texture) bool {
+pub fn unloadTexture(index: u8) bool {
     var found = false;
-    defer c.SDL_DestroyTexture(tex);
 
-    for (0..max_textures) |i| {
-        if (textures[i] == tex) {
-            textures[i] = null;
+    if (index >= 0 and index < max_textures) {
+        var texture = textures[index];
+        if (texture) {
             found = true;
-            break;
+            c.SDL_FreeTexture(texture);
+            textures[index] = null;
+            free_textures.push(index);
         }
     }
 
